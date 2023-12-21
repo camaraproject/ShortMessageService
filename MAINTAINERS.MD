@@ -1,3 +1,4 @@
 | Org                    | Name                                                |
 | -----------------------| ----------------------------------------------------|
-| §company§ | $name§ |
+| Airtel | Ramit Chawla |
+| KDDI | Tet (Tesuya) Chiba |
