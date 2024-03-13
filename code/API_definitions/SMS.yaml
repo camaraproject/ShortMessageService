@@ -1,14 +1,14 @@
 openapi: 3.0.3
 info:
   title: SMS API
-  version: '0.10'
-  description: >
+  description: |
     The API provides the customer with the ability to send SMS to the destination address(es). 
     There are 3 different categories of SMS i.e. Service, Promotional & Transactional. 
     This API is used to send all categories of messages. 
     Pre-requisite for using this API is that SMS Sender application / enterprise (or customer) needs to onboard itself with the access provider before using this API. 
     This API has only single operation i.e. Send SMS - Provides the capability to deliver SMS to the recepient. 
     In order to the receive delivery receipt separate API to be defined which is to be implemented by the API consumer for sending back the delivery receipt to the 'Send SMS' API consumer in a standardized callback API. 
+  version: 0.1.0
   termsOfService: http://example.com/terms/
   contact:
     name: API Support
@@ -24,257 +24,289 @@ servers:
         default: http://localhost:9091
         description: API root
 tags:
-  - name: Short message
-    description: API for treating SMS
+  - name: Short Message
+    description: API operation to send SMS
 paths:
-  /sms/rid/{destinationAddress}/async:
-     post:
-      summary: sendSMS
-      description: >
-            
+  /text SMS Send:
+    post:
+      tags:
+        - Send text SMS
+      summary: Send text SMS
+      description: |
+        The customer application server makes a request to the SMS API to send SMS message to the destination address of the communication module.
+      operationId: sms-text
       parameters:
-        - name: destinationAddress
-          in: path
-          description: Refers to the destination address.
-          required: true
+        - in: header
+          name: X-Correlator
+          required: false
+          description: Correlation id for the different services
           schema:
             type: string
-        - name: TransactionID
-          schema:
-            $ref: '#/components/schemas/DTransactionID'
-          in: header
       requestBody:
-        $ref: '#/components/requestBodies/SMSAsyncRequestBody'
-      tags:
-        - Short message
-      responses:
-        '200':
-          $ref: '#/components/responses/SendSMSResponse'
-        '400':
-          $ref: '#/components/responses/SendSMSResponseError'
-        '401':
-          description: Unauthorized (no payload)
-        '500':
-          description: Internal server error (no payload)
-        '503':
-          $ref: '#/components/responses/GenericServerErrorResponse'
-  /notify/sms/status:
-    post:
-      summary: notifySendSMSStatus
-      description: >
-
-      requestBody:
-        $ref: '#/components/requestBodies/SendSMSStatusNotification'
-      tags:
-        - Short message
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/sendTextSMSMessage'
+            example:
+              sendTextSMSMessage:
+                smsNumber: 'tel:0123456789'
+                userContact: 'tel:9876543210'
+                smsBody: Hello Open Gateway
+        required: true
       responses:
         '200':
           description: OK
-        '400':
-          description: Bad Request
-        '500':
-          description: Internal Server Error
-components:
-  schemas:
-    DApplicationResultCode:
-      description: >-
-        Representing result for the API call. For success case, \'0\' is set.
-        Otherwise, a four digits code is set.
-      type: string
-      maxLength: 4
-      example: '0'
-    DTransactionID:
-      description: >-
-        An ID with a maximum of 36 chars strings that uniquely identify the
-        transaction.
-      type: string
-      maxLength: 36
-      example: 01234567-abcd-abcd-abcd-abce01234567
-    DClientError:
-      type: object
-      required:
-        - applicationResultCode
-        - errorMessage
-      properties:
-        applicationResultCode:
-          allOf:
-            - $ref: '#/components/schemas/DApplicationResultCode'
-            - example: 2001
-        errorMessage:
-          type: string
-          description: Short message that explains the application result code.
-          example: Resource not Found.
-        transactionID:
-          $ref: '#/components/schemas/DTransactionID'
-    DDestinationAddress:
-      description: Refers to the destination address.
-      type: string
-      example: '123456789012345'
-    DCallBackURL:
-      description: >-
-        Specifies the destination URL to receive push to notifications about
-        completed processes. When left blank, the notifications will be sent to
-        a predefined URL.
-      type: string
-      format: uri
-    DServiceRequestID:
-      description: >-
-        The Request ID that is issued per request. The Request ID consists of 24
-        characters.
-      example: SR0000012345678901234567
-      maxLength: 24
-      type: string
-    DServiceRequestResult:
-      enum:
-        - Succeeded
-        - Failed
-      type: string
-    DDateTimeRequested:
-      description: >-
-        The timestamp (UTC) when a request is sent.
-      type: string
-      format: date-time
-    DDateTimeCompleted:
-      description: >-
-        The timestamp (UTC) when notified of the request completion.
-      type: string
-      format: date-time
-    DMessageContext:
-      description: >-
-        When messageType is set as "GSM7bit", it is required to specify text up
-        to a maximum number of 160 characters. When messageType is set as
-        "Base64", it is required to specify binary data, which has been
-        converted to Base64 character string, up to a maximum of 140 bytes.
-      example: SMS Message
-      type: string
-    DMessageType:
-      description: The Message schema.
-      enum:
-        - GSM7bit
-        - Base64
-      type: string
-    DTTL:
-      description: >
-        TTL(Time to Live) means the SMS valid period in SMSC. 
-      type: integer
-      example: 1
-    DDeliveryStatus:
-      enum:
-        - Succeeded
-        - Failed
-      type: string
-    DDeliveryFailureCause:
-      description: This field is set only when `deliveryStaus` is `Failed`.
-      enum:
-        - PlatformNotSupported
-        - SMSFormatError
-        - SIMNotActive
-        - TTLExpire
-        - NoPlatformResponse
-        - Unknown
-      type: string
-  requestBodies:
-    SMSAsyncRequestBody:
-      description: Message body.
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-              - message
-              - messageType
-            properties:
-              message:
-                $ref: '#/components/schemas/DMessageContext'
-              messageType:
-                $ref: '#/components/schemas/DMessageType'
-              TTL:
-                $ref: '#/components/schemas/DTTL'
-              callBackURL:
-                $ref: '#/components/schemas/DCallBackURL'
-    SendSMSStatusNotification:
-      description: Send SMS status notification
-      required: true
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-              - serviceRequestID
-              - destinationAddress
-              - deliveryStatus
-              - deliveryStatusDetailInfo
-            properties:
-              serviceRequestID:
-                $ref: '#/components/schemas/DServiceRequestID'
-              destinationAddress:
-                $ref: '#/components/schemas/DDestinationAddress'
-              transactionID:
-                $ref: '#/components/schemas/DTransactionID'
-              deliveryStatus:
-                $ref: '#/components/schemas/DDeliveryStatus'
-              cause:
-                $ref: '#/components/schemas/DDeliveryFailureCause'
-              dateTimeRequested:
-                $ref: '#/components/schemas/DDateTimeRequested'
-              dateTimeCompleted:
-                $ref: '#/components/schemas/DDateTimeCompleted'
-  responses:
-    GenericServerErrorResponse:
-      description: Server side error.
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-              - applicationResultCode
-              - errorMessage
-            properties:
-              applicationResultCode:
-                allOf:
-                  - $ref: '#/components/schemas/DApplicationResultCode'
-                  - example: 1003
-              errorMessage:
+          headers:
+            X-Correlator:
+              description: Correlation id for the different services
+              schema:
                 type: string
-                description: Short message that explains the application result code.
-                example: Concurrent requests limit exceeded. (USERS)
-              transactionID:
-                $ref: '#/components/schemas/DTransactionID'
-    SendSMSResponse:
-      description: Request accepted
-      content:
-        application/json:
-          schema:
-            type: object
-            required:
-              - applicationResultCode
-              - destinationAddress
-              - serviceRequestID
-            properties:
-              serviceRequestID:
-                $ref: '#/components/schemas/DServiceRequestID'
-              destinationAddress:
-                $ref: '#/components/schemas/DDestinationAddress'
-              applicationResultCode:
-                $ref: '#/components/schemas/DApplicationResultCode'
-              transactionID:
-                $ref: '#/components/schemas/DTransactionID'
-    SendSMSResponseError:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/sendResponse'
+        '400':
+          $ref: '#/components/responses/Generic400'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          $ref: '#/components/responses/Generic403'
+        '404':
+          $ref: '#/components/responses/Generic404'
+        '500':
+          $ref: '#/components/responses/Generic500'
+        '503':
+          $ref: '#/components/responses/Generic503'
+      security:
+        - openId:
+          - sms
+  /Binary SMS Send:
+    post:
+      tags:
+        - Send binary SMS
+      summary: Send binary SMS
       description: |
-        * <u>*2001 Resource not Found.*</u>
-        * <u>*2002 Invalid destination address.*</u>
-        * <u>*2014 Invalid Message Context.*</u>
-        * <u>*2015 Invalid Message Type.*</u>
-        * <u>*2016 Message too long.*</u>
-        * <u>*2027 Invalid callback URL.*</u>
-        * <u>*2059 Inactive destination.*</u>
-        * <u>*2089 Invalid TTL.*</u>
-      content:
-        application/json:
+        The customer application server makes a request to the SMS API to send SMS message to the destination address of the communication module.
+      operationId: sms-binary
+      parameters:
+        - in: header
+          name: X-Correlator
+          required: false
+          description: Correlation id for the different services
           schema:
-            $ref: '#/components/schemas/DClientError'
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/sendBinarySMSMessage'
+            example:
+              sendBinarySMSMessage:
+                smsNumber: 'tel:0123456789'
+                userContact: 'tel:9876543210'
+                smsBody: BgUEkZkAAAA5ADIANAAw
+        required: true
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Correlator:
+              description: Correlation id for the different services
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/sendResponse'
+        '400':
+          $ref: '#/components/responses/Generic400'
+        '401':
+          $ref: '#/components/responses/Generic401'
+        '403':
+          $ref: '#/components/responses/Generic403'
+        '404':
+          $ref: '#/components/responses/Generic404'
+        '500':
+          $ref: '#/components/responses/Generic500'
+        '503':
+          $ref: '#/components/responses/Generic503'
+      security:
+        - openId:
+          - sms
+components:
   securitySchemes:
     openId:
       type: openIdConnect
       openIdConnectUrl: https://example.com/.well-known/openid-configuration
+  schemas:
+    sendTextSMSMessage:
+      type: object
+      required:
+        - smsNumber
+        - userContact
+        - smsBody
+      properties:
+        smsnumber:
+          type: array
+          description: "The recipients MSISDN"
+          items:
+            type: string
+        userContact:
+          type: string
+          description: "The senders MSISDN"
+        smsBody:
+          type: string
+          description: "Regular text string"
+    sendBinarySMSMessage:
+      type: object
+      required:
+        - smsNumber
+        - userContact
+        - smsBody
+      properties:
+        smsnumber:
+          type: array
+          description: "The recipients MSISDN"
+          items:
+            type: string
+        userContact:
+          type: string
+          description: "The senders MSISDN"
+        smsBody:
+          type: string
+          description: "Base64 coded string"
+    sendResponse:
+      type: object
+      required:
+        - msgId
+        - status
+        - timestamp
+      properties:
+        msgId:
+          type: string
+          description: "The SMS messages sent to the recipients are identified by smsnumber are identified."
+        status:
+          type: string
+          example: Success
+          description: "Delivery status for the recipient identified by smsnumber."
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp of latest SIM swap performed. It must follow [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) and must have time zone. Recommended format is yyyy-MM-dd'T'HH:mm:ss.SSSZ (i.e. which allows 2023-07-03T14:27:08.312+02:00 or 2023-07-03T12:27:08.312Z)
+    responseErrorMessage:
+      type: object
+      required:
+        - status
+        - code
+        - detail
+      properties:
+        status:
+          type: integer
+          description: HTTP response status code
+        code:
+          type: string
+          description: Code given to this error
+        detail:
+          type: string
+          description: Detailed error description
+  responses:
+    Generic400:
+      description: Problem with the client request
+      headers:
+        X-Correlator:
+          description: Correlation id for the different services
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/responseErrorMessage'
+          example:
+            status: 400
+            code: INVALID_ARGUMENT
+            detail: Client specified an invalid argument, request body or query param
+    Generic401:
+      description: Authentication problem with the client request
+      headers:
+        X-Correlator:
+          description: Correlation id for the different services
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/responseErrorMessage'
+          example:
+            status: 401
+            code: UNAUTHENTICATED
+            detail: Request not authenticated due to missing, invalid, or expired credentials
+    Generic403:
+      description: Client does not have sufficient permission
+      headers:
+        X-Correlator:
+          description: Correlation id for the different services
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/responseErrorMessage'
+          examples:
+            PermissionDenied:
+              value:
+                status: 403
+                code: PERMISSION_DENIED
+                detail: Client does not have sufficient permissions to perform this action
+            InvalidTokenContext:
+              value:
+                status: 403
+                code: INVALID_TOKEN_CONTEXT
+                detail: Phone number cannot be deducted from access token context
+    Generic404:
+      description: Resource Not Found
+      headers:
+        X-Correlator:
+          description: Correlation id for the different services
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/responseErrorMessage'
+          example:
+            status: 404
+            code: NOT_FOUND
+            detail: A specified resource is not found
+    Generic500:
+      description: Server error
+      headers:
+        X-Correlator:
+          description: Correlation id for the different services
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/responseErrorMessage'
+          example:
+            status: 500
+            code: INTERNAL
+            detail: Server error
+    Generic503:
+      description: Service unavailable. Typically the server is down.
+      headers:
+        X-Correlator:
+          description: Correlation id for the different services
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/responseErrorMessage'
+          example:
+            status: 503
+            code: UNAVAILABLE
+            detail: Service unavailable
+externalDocs:
+  description: Project documentation at CAMARA
+  url: https://github.com/camaraproject/NumberVerification
