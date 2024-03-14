@@ -27,67 +27,21 @@ tags:
   - name: Short Message
     description: API operation to send SMS
 paths:
-  /text SMS Send:
-    post:
-      tags:
-        - Send text SMS
-      summary: Send text SMS
-      description: |
-        The customer application server makes a request to the SMS API to send SMS message to the destination address of the communication module.
-      operationId: sms-text
-      parameters:
-        - in: header
-          name: X-Correlator
-          required: false
-          description: Correlation id for the different services
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/sendTextSMSMessage'
-            example:
-              sendTextSMSMessage:
-                smsNumber: 'tel:0123456789'
-                userContact: 'tel:9876543210'
-                smsBody: Hello Open Gateway
+  /{callbackURL}/sms:
+    parameters:
+      - schema:
+          type: string
+        name: callbackURL
+        in: path
         required: true
-      responses:
-        '200':
-          description: OK
-          headers:
-            X-Correlator:
-              description: Correlation id for the different services
-              schema:
-                type: string
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/sendResponse'
-        '400':
-          $ref: '#/components/responses/Generic400'
-        '401':
-          $ref: '#/components/responses/Generic401'
-        '403':
-          $ref: '#/components/responses/Generic403'
-        '404':
-          $ref: '#/components/responses/Generic404'
-        '500':
-          $ref: '#/components/responses/Generic500'
-        '503':
-          $ref: '#/components/responses/Generic503'
-      security:
-        - openId:
-          - sms
-  /Binary SMS Send:
+        description: Callback URL
     post:
       tags:
-        - Send binary SMS
-      summary: Send binary SMS
+        - Send SMS
+      summary: Send SMS
       description: |
         The customer application server makes a request to the SMS API to send SMS message to the destination address of the communication module.
-      operationId: sms-binary
+      operationId: sms
       parameters:
         - in: header
           name: X-Correlator
@@ -99,12 +53,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/sendBinarySMSMessage'
+              $ref: '#/components/schemas/sendSMSMessage'
             example:
-              sendBinarySMSMessage:
+              sendSMSMessage:
                 smsNumber: 'tel:0123456789'
                 userContact: 'tel:9876543210'
-                smsBody: BgUEkZkAAAA5ADIANAAw
+                smsBody: xxxxxxxxxx
         required: true
       responses:
         '200':
@@ -139,7 +93,7 @@ components:
       type: openIdConnect
       openIdConnectUrl: https://example.com/.well-known/openid-configuration
   schemas:
-    sendTextSMSMessage:
+    sendSMSMessage:
       type: object
       required:
         - smsNumber
@@ -156,25 +110,7 @@ components:
           description: "The senders MSISDN"
         smsBody:
           type: string
-          description: "Regular text string"
-    sendBinarySMSMessage:
-      type: object
-      required:
-        - smsNumber
-        - userContact
-        - smsBody
-      properties:
-        smsnumber:
-          type: array
-          description: "The recipients MSISDN"
-          items:
-            type: string
-        userContact:
-          type: string
-          description: "The senders MSISDN"
-        smsBody:
-          type: string
-          description: "Base64 coded string"
+          description: "SMS message"
     sendResponse:
       type: object
       required:
