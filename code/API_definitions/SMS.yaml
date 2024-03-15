@@ -59,11 +59,11 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/MessageRequest'
-#            example:
-#              MessageRequest:
-#                smsNumber: 'tel:0123456789'
-#                userContact: 'tel:9876543210'
-#                smsBody: xxxxxxxxxx
+            example:
+              MessageRequest:
+                smsNumber: 'tel:0123456789'
+                userContact: 'tel:9876543210'
+                smsBody: xxxxxxxxxx
         required: true
       responses:
         '200':
@@ -127,16 +127,16 @@ components:
       type: object
       required:
         - msgId
-#        - status
+        - status
         - timestamp
       properties:
         msgId:
           type: string
           description: "The SMS messages sent to the recipients are identified by smsnumber are identified."
-#        status:
-#          type: string
-#          example: Success
-#          description: "Delivery status for the recipient identified by smsnumber."
+        status:
+          type: string
+          example: Success
+          description: "Delivery status for the recipient identified by smsnumber."
         timestamp:
           type: string
           format: date-time
