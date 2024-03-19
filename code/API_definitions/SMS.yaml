@@ -2,18 +2,21 @@ openapi: 3.0.3
 info:
   title: SMS API
   description: |
-    The API provides the customer with the ability to send SMS to the destination address(es).
+    The API provides the customer with the ability to send SMS to the recepient address(es).
     Customer can use this API to send SMS in following scenarios:
-    1. Application to Application (A2A) which might be a binary message and 
-    2. Application to Person (A2P) which would be a text message. 
-   
-    For A2P, there are 3 different categories of SMS i.e. Service, Promotional & Transactional. 
-    
-    This API is used to messages across the above mentioned scenarios and categories.
+    1. Application server needs to send text message to a recepient number which is being used on a mobile phone device. There are 3 different categories of text SMS i.e. Service, Promotion & Transaction.
+    2. Application server needs to send binary message to a recepient number which is being used on (IoT) device.
     
     Pre-requisite for using this API is that SMS Sender application / enterprise (or customer) needs to onboard themselves with the access provider before using this API. 
-    This API has only single operation to send SMS. ShortMessage Provides the capability to deliver SMS to the recepient. 
-    In order to the receive delivery receipt separate API to be defined which is to be implemented by the API consumer for sending back the delivery receipt to the 'Send SMS' API consumer in a standardized callback API. 
+    This API has single operation to send SMS. 
+
+    In order to the receive delivery receipt, separate API to be subscribed by the API consumer for receiving the delivery receipt in a standardized callback API. 
+
+    # Authorization and authentication
+    CAMARA guidelines defines a set of authorization flows which can grant API clients access to the API functionality, as outlined in the document [CAMARA-API-access-and-user-consent.md](https://github.com/camaraproject/IdentityAndConsentManagement/blob/main/documentation/CAMARA-API-access-and-user-consent.md). Which specific authorization flows are to be used will be determined during onboarding process, happening between the API Client and the Telco Operator exposing the API, taking into account the declared purpose for accessing the API, while also being subject to the prevailing legal framework dictated by local legislation.
+
+    It is important to remark that in cases where personal user data is processed by the API, and users can exercise their rights through mechanisms such as opt-in and/or opt-out, the use of 3-legged access tokens becomes mandatory. This measure ensures that the API remains in strict compliance with user privacy preferences and regulatory obligations, upholding the principles of transparency and user-centric data control.    
+
   version: 0.1.0
   termsOfService: http://example.com/terms/
   contact:
@@ -61,20 +64,14 @@ paths:
               $ref: '#/components/schemas/MessageRequest'
             example:
               MessageRequest:
-                smsNumber: 'tel:0123456789'
-                userContact: 'tel:9876543210'
-                smsBody: xxxxxxxxxx
+                to: '+910123456789'
+                from: '+919876543210'
+                category: PROMOTION
+                message: xxxxxxxxxx
         required: true
       responses:
         '200':
-          description: OK
-          headers:
-            x-correlator:
-              $ref: '#/components/headers/x-correlator'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MessageResponse'
+          $ref: '#/components/responses/Generic200'
         '400':
           $ref: '#/components/responses/Generic400'
         '401':
@@ -120,6 +117,9 @@ components:
         from:
           type: string
           description: "The senders MSISDN"
+        category:
+          type: string
+          enum: ["PROMOTION","SERVICE","TRANSACTION"]
         message:
           type: string
           description: "SMS message"
@@ -127,16 +127,11 @@ components:
       type: object
       required:
         - msgId
-        - status
         - timestamp
       properties:
         msgId:
           type: string
           description: "The SMS messages sent to the recipients are identified by smsnumber are identified."
-        status:
-          type: string
-          example: Success
-          description: "Delivery status for the recipient identified by smsnumber."
         timestamp:
           type: string
           format: date-time
@@ -158,10 +153,25 @@ components:
           type: string
           description: Detailed error description
   responses:
+    Generic200:
+      description: OK
+      headers:
+        x-correlator:
+          description: Correlation id for the different services
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MessageResponse'
+          example:
+            msgId: 56647d96-b3e6-48d2-b93f-ab0d56bdd965
+            timestamp: "2024-03-19T12:33:27.070Z"
+    
     Generic400:
       description: Problem with the client request
       headers:
-        X-Correlator:
+        x-correlator:
           description: Correlation id for the different services
           schema:
             type: string
@@ -176,7 +186,7 @@ components:
     Generic401:
       description: Authentication problem with the client request
       headers:
-        X-Correlator:
+        x-correlator:
           description: Correlation id for the different services
           schema:
             type: string
@@ -191,7 +201,7 @@ components:
     Generic403:
       description: Client does not have sufficient permission
       headers:
-        X-Correlator:
+        x-correlator:
           description: Correlation id for the different services
           schema:
             type: string
@@ -213,7 +223,7 @@ components:
     Generic404:
       description: Resource Not Found
       headers:
-        X-Correlator:
+        x-correlator:
           description: Correlation id for the different services
           schema:
             type: string
@@ -228,7 +238,7 @@ components:
     Generic500:
       description: Server error
       headers:
-        X-Correlator:
+        x-correlator:
           description: Correlation id for the different services
           schema:
             type: string
@@ -243,7 +253,7 @@ components:
     Generic503:
       description: Service unavailable. Typically the server is down.
       headers:
-        X-Correlator:
+        x-correlator:
           description: Correlation id for the different services
           schema:
             type: string
