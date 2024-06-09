@@ -1,4 +1,4 @@
-| Org                    | Name                                                |
-| -----------------------| ----------------------------------------------------|
-| Airtel | Ramit Chawla |
-| KDDI | Tet (Tesuya) Chiba |
+| Org                    | Name                   | GitHub Username             |
+| -----------------------| -----------------------|-----------------------------|
+| Airtel | Ramit Chawla | a-ramit |
+| KDDI | Tet (Tesuya) Chiba | tcchiba |
