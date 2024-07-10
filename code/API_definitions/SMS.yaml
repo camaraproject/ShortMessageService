@@ -62,12 +62,13 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/MessageRequest'
-            example:
+            examples:
               MessageRequest:
-                to: '+910123456789'
-                from: '+919876543210'
-                category: PROMOTION
-                message: xxxxxxxxxx
+                value:
+                  to: ['+910123456789']
+                  from: '+919876543210'
+                  category: PROMOTION
+                  message: xxxxxxxxxx
         required: true
       responses:
         '200':
