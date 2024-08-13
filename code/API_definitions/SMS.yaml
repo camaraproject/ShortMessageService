@@ -144,10 +144,11 @@ components:
           type: array
           description: "The recipients mobile number"
           items:
-            type: string
+            $ref: "#/components/schemas/PhoneNumber"
+
         from:
-          type: string
-          description: "The senders mobile number/identifier"
+          $ref: "#/components/schemas/PhoneNumber"
+
         category:
           description: Types of messages
           type: string
@@ -186,6 +187,12 @@ components:
         detail:
           type: string
           description: Detailed error description
+
+    PhoneNumber:
+      description: A public identifier addressing a telephone subscription. In mobile networks it corresponds to the MSISDN (Mobile Station International Subscriber Directory Number). In order to be globally unique it has to be formatted in international format, according to E.164 standard, prefixed with '+'.
+      type: string
+      pattern: '^\+[1-9][0-9]{4,14}$'
+      example: "+123456789"
   responses:
     Generic200:
       description: OK
