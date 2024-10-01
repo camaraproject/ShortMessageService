@@ -13,9 +13,37 @@ info:
     In order to the receive delivery receipt, separate API to be subscribed by the API consumer for receiving the delivery receipt in a standardized callback API. 
 
     # Authorization and authentication
-    CAMARA guidelines defines a set of authorization flows which can grant API clients access to the API functionality, as outlined in the document [CAMARA-API-access-and-user-consent.md](https://github.com/camaraproject/IdentityAndConsentManagement/blob/main/documentation/CAMARA-API-access-and-user-consent.md). Which specific authorization flows are to be used will be determined during onboarding process, happening between the API Client and the Telco Operator exposing the API, taking into account the declared purpose for accessing the API, while also being subject to the prevailing legal framework dictated by local legislation.
+
+    The "Camara Security and Interoperability Profile" provides details on how a client requests an access token. Please refer to Identify and Consent Management (https://github.com/camaraproject/IdentityAndConsentManagement/) for the released version of the Profile.
+
+    Which specific authorization flows are to be used will be determined during onboarding process, happening between the API Client and the Telco Operator exposing the API, taking into account the declared purpose for accessing the API, while also being subject to the prevailing legal framework dictated by local legislation.
 
     It is important to remark that in cases where personal user data is processed by the API, and users can exercise their rights through mechanisms such as opt-in and/or opt-out, the use of 3-legged access tokens becomes mandatory. This measure ensures that the API remains in strict compliance with user privacy preferences and regulatory obligations, upholding the principles of transparency and user-centric data control.    
+
+    # Identifying "from" i.e. sender identifer/number from the access token
+
+    This specification defines the `from` field as optional in API requests, specifically in cases where the API is accessed using a 3-legged access token, and the sender identifer/number can be uniquely identified by the token. This approach simplifies API usage for API consumers by relying on the sender identifer/number information associated with the access token used to invoke the API.
+
+    ## Handling of sender mobile number/identification information:
+
+    ### Optional sender identifer/number for 3-legged tokens:
+
+    - When using a 3-legged access token, the sender identifer/number associated with the access token must be considered as the "from" for the API request. This means that the sender identifer/number is not required in the request, and if included it must identify the same sender identifer/number, therefore **it is recommended NOT to include it in these scenarios** to simplify the API usage and avoid additional validations.
+
+    ### Validation mechanism:
+
+    - The server will extract the sender identifer/number from the access token, if available.
+    - If the API request additionally includes a `from` attribute when using a 3-legged access token, the API will validate that the sender identifer/number provided matches the one associated with the access token.
+    - If there is a mismatch, the API will respond with a 403 - INVALID_TOKEN_CONTEXT error, indicating that the sender identifer/number in the request does not match the token.
+
+    ### Error handling for unidentifiable devices:
+
+    - If the `from` attribute is not included in the request and the sender identifer/number information cannot be derived from the 3-legged access token, the server will return a 422 `UNIDENTIFIABLE_DEVICE` error.
+
+    ### Restrictions for tokens without an associated authenticated identifier:
+
+    - For scenarios which do not have a sender identifer/number associated to the token during the authentication flow, e.g. 2-legged access tokens, the `from` attribute MUST be provided in the API request. This ensures that the sender identifer/number is explicit and valid for each API call made with these tokens.
+
 
   version: 0.1.0-alpha.1
   termsOfService: http://example.com/terms/
@@ -48,7 +76,7 @@ paths:
         - openId:
           - send-sms:short-message
       tags:
-        - Send SMS
+        - Short Message Service
       summary: Send SMS
       description: |
         The customer application server makes a request to the SMS API to send SMS message to the destination address.
@@ -88,6 +116,7 @@ paths:
 components:
   securitySchemes:
     openId:
+      description: OpenID Connect authentication
       type: openIdConnect
       openIdConnectUrl: https://example.com/.well-known/openid-configuration
   parameters:
@@ -97,34 +126,38 @@ components:
       description: Correlation id for the different services
       schema:
         type: string
-  headers:
-    x-correlator:
-      description: Correlation id for the different services
-      schema:
-        type: string
+  # headers:
+  #   x-correlator:
+  #     description: Correlation id for the different services
+  #     schema:
+  #       type: string
   schemas:
     MessageRequest:
+      description: Request message object
       type: object
       required:
         - to
-        - from
+#        - from
         - message
       properties:
         to:
           type: array
-          description: "The recipients MSISDN"
+          description: "The recipients mobile number"
           items:
-            type: string
+            $ref: "#/components/schemas/PhoneNumber"
+
         from:
-          type: string
-          description: "The senders MSISDN"
+          $ref: "#/components/schemas/PhoneNumber"
+
         category:
+          description: Types of messages
           type: string
           enum: ["PROMOTION","SERVICE","TRANSACTION"]
         message:
           type: string
           description: "SMS message"
     MessageResponse:
+      description: Response message object
       type: object
       required:
         - msgId
@@ -138,6 +171,7 @@ components:
           format: date-time
           description: Timestamp when SMS was delivered. It must follow [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) and must have time zone. Recommended format is yyyy-MM-dd'T'HH:mm:ss.SSSZ (i.e. which allows 2023-07-03T14:27:08.312+02:00 or 2023-07-03T12:27:08.312Z)
     ErrorInfo:
+      description: Error message object
       type: object
       required:
         - status
@@ -153,6 +187,12 @@ components:
         detail:
           type: string
           description: Detailed error description
+
+    PhoneNumber:
+      description: A public identifier addressing a telephone subscription. In mobile networks it corresponds to the MSISDN (Mobile Station International Subscriber Directory Number). In order to be globally unique it has to be formatted in international format, according to E.164 standard, prefixed with '+'.
+      type: string
+      pattern: '^\+[1-9][0-9]{4,14}$'
+      example: "+123456789"
   responses:
     Generic200:
       description: OK
