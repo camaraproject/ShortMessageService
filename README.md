@@ -1,3 +1,13 @@
+> [!WARNING]
+> **Repository archived**
+>
+> This repository has been archived following the CAMARA **Lifecycle Clean-up Process** and is kept for reference / maintenance of previous releases only.
+>
+> - Decision record (API Backlog/TSC): [APIBacklog#285](https://github.com/camaraproject/APIBacklog/issues/285)
+> - Lifecycle policy: [Unified Clean-up Process](https://github.com/camaraproject/Governance/blob/main/documentation/API-Onboarding-and-Lifecycle.md#unified-clean-up-process-for-inactive-onboarding-trackers-and-repositories)
+> - Reason or Phase of the process: [Phase C – Repository With Partial Progress](https://github.com/camaraproject/Governance/blob/main/documentation/API-Onboarding-and-Lifecycle.md#archival-criteria-per-phase)
+> - Request reactivation: submit a new issue in APIBacklog referencing this archived repository: [Reactivation of archived repositories](https://github.com/camaraproject/Governance/blob/main/documentation/API-Onboarding-and-Lifecycle.md#reactivation-of-archived-repositories)
+
 <a href="https://github.com/camaraproject/ShortMessageService/commits/" title="Last Commit"><img src="https://img.shields.io/github/last-commit/camaraproject/ShortMessageService?style=plastic"></a>
 <a href="https://github.com/camaraproject/ShortMessageService/issues" title="Open Issues"><img src="https://img.shields.io/github/issues/camaraproject/ShortMessageService?style=plastic"></a>
 <a href="https://github.com/camaraproject/ShortMessageService/pulls" title="Open Pull Requests"><img src="https://img.shields.io/github/issues-pr/camaraproject/ShortMessageService?style=plastic"></a>
